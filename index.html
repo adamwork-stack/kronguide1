@@ -200,10 +200,20 @@
 
         var hubW = size * 0.42;
         var hubH = size * 0.22;
-        var radius = size * 0.375;
+        /* Push individuals outward; cap by viewport so nodes stay inside the screen. */
+        var nodePad = Math.max(40, size * 0.064);
+        var radius = Math.min(size * 0.58, cx - nodePad, cy - nodePad);
+        radius = Math.max(radius, size * 0.3);
 
         diagram.style.setProperty("--hub-w", hubW + "px");
         diagram.style.setProperty("--hub-h", hubH + "px");
+
+        var arrowHead = document.getElementById("arrowHead");
+        if (arrowHead) {
+          var mw = Math.max(9, Math.min(18, size * 0.016));
+          arrowHead.setAttribute("markerWidth", String(mw));
+          arrowHead.setAttribute("markerHeight", String(mw));
+        }
 
         lineGroup.innerHTML = "";
         nodesRoot.innerHTML = "";
@@ -238,14 +248,14 @@
           var startDist =
             hubRx * hubRy /
             Math.hypot(hubRy * ux, hubRx * uy);
-          var margin = 6;
+          var margin = 1;
           var x1 = cx + ux * (startDist + margin);
           var y1 = cy + uy * (startDist + margin);
           var halfToEdge =
             Math.min(
               Math.abs(ux) < 1e-6 ? Infinity : rect.width / 2 / Math.abs(ux),
               Math.abs(uy) < 1e-6 ? Infinity : rect.height / 2 / Math.abs(uy)
-            ) + 4;
+            ) + 2;
           var x2 = nodeCx - ux * halfToEdge;
           var y2 = nodeCy - uy * halfToEdge;
 
@@ -256,7 +266,7 @@
           line.setAttribute("y2", y2);
           line.setAttribute(
             "stroke-width",
-            String(Math.max(2.5, Math.min(6, size * 0.0035)))
+            String(Math.max(2.8, Math.min(7, size * 0.004)))
           );
           line.setAttribute("marker-start", "url(#arrowHead)");
           line.setAttribute("marker-end", "url(#arrowHead)");
