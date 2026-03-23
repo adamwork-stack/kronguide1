@@ -261,10 +261,10 @@
         var hubRy = hubH / 2;
 
         function addPctBadges(x1, y1, x2, y2) {
-          /* Hub end = low t (80% Kron); node end = high t (20% individuals). */
+          /* t=0 at hub line end, t=1 at node line end. Badges sit at each end (inset slightly from arrowheads). */
           [
-            { t: 0.4, text: "80%", front: true },
-            { t: 0.62, text: "20%" },
+            { t: 0.07, text: "80%", front: true },
+            { t: 0.93, text: "20%" },
           ].forEach(function (b) {
             var bx = x1 + (x2 - x1) * b.t;
             var by = y1 + (y2 - y1) * b.t;
