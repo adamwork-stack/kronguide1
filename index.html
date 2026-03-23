@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kron Development — Partner Network</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --hub-w: min(42vw, 380px);
+      --hub-h: min(22vw, 200px);
+      --radius: min(38vw, 340px);
+      --green-line: #2ecc71;
+      --peach: #f5c4a0;
+      --peach-border: #e8a878;
+      --blue-node: #4a7fc4;
+      --blue-border: #3568a8;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 50%, #dce4ec 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .diagram {
+      position: relative;
+      width: min(96vw, 920px);
+      height: min(96vw, 920px);
+      max-height: 85vh;
+      aspect-ratio: 1;
+    }
+
+    .connections {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hub {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--hub-w);
+      height: var(--hub-h);
+      border-radius: 50%;
+      background: linear-gradient(180deg, #3d9e5c 0%, #2d7a47 45%, #1f5c34 100%);
+      box-shadow:
+        0 0 0 3px rgba(255, 255, 255, 0.85),
+        0 8px 24px rgba(0, 0, 0, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px 20px;
+      z-index: 3;
+    }
+
+    .hub span {
+      color: #fff;
+      font-weight: 700;
+      font-size: clamp(1rem, 3.2vw, 1.65rem);
+      line-height: 1.2;
+      text-shadow:
+        2px 2px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000;
+    }
+
+    .node {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      min-width: 100px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: clamp(0.75rem, 2vw, 0.95rem);
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      z-index: 4;
+      transform: translate(-50%, -50%);
+      border: 2px solid var(--peach-border);
+      background: var(--peach);
+      color: #3d2918;
+    }
+
+    .node--you {
+      background: var(--blue-node);
+      border-color: var(--blue-border);
+      color: #fff;
+    }
+
+    .split-badges {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .split-badge {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      background: #7b4fb8;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .split-badge span {
+      transform: rotate(-45deg);
+      color: #ffeb3b;
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: -0.02em;
+    }
+
+    @media (max-width: 520px) {
+      .node {
+        min-width: 78px;
+        padding: 8px 10px;
+      }
+      .split-badge {
+        width: 36px;
+        height: 36px;
+      }
+      .split-badge span {
+        font-size: 0.62rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram" id="diagram" aria-label="Kron Development partner network">
+    <svg class="connections" id="svgLines" aria-hidden="true">
+      <defs>
+        <marker
+          id="arrowHead"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#2ecc71" />
+        </marker>
+      </defs>
+      <g id="lineGroup" stroke="var(--green-line)" stroke-width="3" fill="none"></g>
+    </svg>
+
+    <div class="split-badges" id="splitBadges"></div>
+
+    <div class="hub"><span>Kron Development</span></div>
+
+    <div id="nodesRoot"></div>
+  </div>
+
+  <script>
+    (function () {
+      /** Degrees clockwise from top (12 o'clock). Order matches reference diagram. */
+      var nodes = [
+        { label: "Partner(n)", angle: 308, variant: "peach" },
+        { label: "Partner(n-1)", angle: 0, variant: "peach" },
+        { label: "Partner(n+1)", angle: 52, variant: "peach" },
+        { label: "Kobi", angle: 90, variant: "peach" },
+        { label: "Terry", angle: 128, variant: "peach" },
+        { label: "Daniel", angle: 158, variant: "peach" },
+        { label: "Philip", angle: 180, variant: "peach" },
+        { label: "Michael", angle: 208, variant: "peach" },
+        { label: "Jeffrey", angle: 252, variant: "peach" },
+        { label: "You", angle: 270, variant: "you" },
+      ];
+
+      var diagram = document.getElementById("diagram");
+      var svg = document.getElementById("svgLines");
+      var lineGroup = document.getElementById("lineGroup");
+      var nodesRoot = document.getElementById("nodesRoot");
+      var splitBadges = document.getElementById("splitBadges");
+
+      function degToRad(d) {
+        return (d * Math.PI) / 180;
+      }
+
+      function placeNodesAndLines() {
+        var w = diagram.clientWidth;
+        var h = diagram.clientHeight;
+        var cx = w / 2;
+        var cy = h / 2;
+
+        var hubW = Math.min(w * 0.42, 380);
+        var hubH = Math.min(w * 0.22, 200);
+        var radius = Math.min(w * 0.38, 340);
+
+        lineGroup.innerHTML = "";
+        nodesRoot.innerHTML = "";
+        splitBadges.innerHTML = "";
+
+        var hubRx = hubW / 2;
+        var hubRy = hubH / 2;
+
+        nodes.forEach(function (n) {
+          var rad = degToRad(n.angle);
+          var nx = cx + radius * Math.sin(rad);
+          var ny = cy - radius * Math.cos(rad);
+
+          var el = document.createElement("div");
+          el.className = "node" + (n.variant === "you" ? " node--you" : "");
+          el.textContent = n.label;
+          el.style.left = nx + "px";
+          el.style.top = ny + "px";
+          nodesRoot.appendChild(el);
+
+          var rect = el.getBoundingClientRect();
+          var rootRect = diagram.getBoundingClientRect();
+          var nodeCx = rect.left - rootRect.left + rect.width / 2;
+          var nodeCy = rect.top - rootRect.top + rect.height / 2;
+
+          var dx = nodeCx - cx;
+          var dy = nodeCy - cy;
+          var len = Math.hypot(dx, dy) || 1;
+          var ux = dx / len;
+          var uy = dy / len;
+
+          var startDist =
+            hubRx * hubRy /
+            Math.hypot(hubRy * ux, hubRx * uy);
+          var margin = 6;
+          var x1 = cx + ux * (startDist + margin);
+          var y1 = cy + uy * (startDist + margin);
+          var halfToEdge =
+            Math.min(
+              Math.abs(ux) < 1e-6 ? Infinity : rect.width / 2 / Math.abs(ux),
+              Math.abs(uy) < 1e-6 ? Infinity : rect.height / 2 / Math.abs(uy)
+            ) + 4;
+          var x2 = nodeCx - ux * halfToEdge;
+          var y2 = nodeCy - uy * halfToEdge;
+
+          var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", y1);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          line.setAttribute("marker-start", "url(#arrowHead)");
+          line.setAttribute("marker-end", "url(#arrowHead)");
+          lineGroup.appendChild(line);
+
+          if (n.label === "Partner(n)") {
+            var t1 = 0.35;
+            var t2 = 0.58;
+            [
+              { t: t1, text: "20%" },
+              { t: t2, text: "80%" },
+            ].forEach(function (b) {
+              var bx = x1 + (x2 - x1) * b.t;
+              var by = y1 + (y2 - y1) * b.t;
+              var badge = document.createElement("div");
+              badge.className = "split-badge";
+              badge.style.left = bx - cx + "px";
+              badge.style.top = by - cy + "px";
+              var inner = document.createElement("span");
+              inner.textContent = b.text;
+              badge.appendChild(inner);
+              splitBadges.appendChild(badge);
+            });
+          }
+        });
+
+        svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+      }
+
+      window.addEventListener("resize", function () {
+        requestAnimationFrame(placeNodesAndLines);
+      });
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(placeNodesAndLines);
+      } else {
+        placeNodesAndLines();
+      }
+
+      requestAnimationFrame(function () {
+        placeNodesAndLines();
+      });
+    })();
+  </script>
+</body>
+</html>
