@@ -10,9 +10,6 @@
     }
 
     :root {
-      --hub-w: min(42vw, 380px);
-      --hub-h: min(22vw, 200px);
-      --radius: min(38vw, 340px);
       --green-line: #2ecc71;
       --peach: #f5c4a0;
       --peach-border: #e8a878;
@@ -20,23 +17,25 @@
       --blue-border: #3568a8;
     }
 
+    html,
     body {
       margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
       min-height: 100vh;
+      min-height: 100dvh;
       font-family: Arial, Helvetica, sans-serif;
       background: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 50%, #dce4ec 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
     }
 
     .diagram {
-      position: relative;
-      width: min(96vw, 920px);
-      height: min(96vw, 920px);
-      max-height: 85vh;
-      aspect-ratio: 1;
+      position: fixed;
+      inset: 0;
+      --hub-w: 200px;
+      --hub-h: 104px;
     }
 
     .connections {
@@ -71,7 +70,7 @@
     .hub span {
       color: #fff;
       font-weight: 700;
-      font-size: clamp(1rem, 3.2vw, 1.65rem);
+      font-size: clamp(0.95rem, 3.6vmin, 2.25rem);
       line-height: 1.2;
       text-shadow:
         2px 2px 0 #000,
@@ -84,10 +83,10 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      min-width: 100px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: clamp(0.75rem, 2vw, 0.95rem);
+      min-width: clamp(72px, 18vmin, 140px);
+      padding: clamp(6px, 1.2vmin, 14px) clamp(8px, 1.6vmin, 18px);
+      border-radius: clamp(6px, 1vmin, 12px);
+      font-size: clamp(0.7rem, 2.4vmin, 1.15rem);
       font-weight: 600;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
@@ -116,10 +115,10 @@
 
     .split-badge {
       position: absolute;
-      width: 44px;
-      height: 44px;
+      width: clamp(34px, 5.2vmin, 56px);
+      height: clamp(34px, 5.2vmin, 56px);
       background: #7b4fb8;
-      border-radius: 6px;
+      border-radius: clamp(4px, 0.7vmin, 8px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -131,22 +130,12 @@
       transform: rotate(-45deg);
       color: #ffeb3b;
       font-weight: 800;
-      font-size: 0.72rem;
+      font-size: clamp(0.55rem, 1.5vmin, 0.85rem);
       letter-spacing: -0.02em;
     }
 
-    @media (max-width: 520px) {
-      .node {
-        min-width: 78px;
-        padding: 8px 10px;
-      }
-      .split-badge {
-        width: 36px;
-        height: 36px;
-      }
-      .split-badge span {
-        font-size: 0.62rem;
-      }
+    .split-badge--front {
+      z-index: 1;
     }
   </style>
 </head>
@@ -207,10 +196,14 @@
         var h = diagram.clientHeight;
         var cx = w / 2;
         var cy = h / 2;
+        var size = Math.min(w, h);
 
-        var hubW = Math.min(w * 0.42, 380);
-        var hubH = Math.min(w * 0.22, 200);
-        var radius = Math.min(w * 0.38, 340);
+        var hubW = size * 0.42;
+        var hubH = size * 0.22;
+        var radius = size * 0.375;
+
+        diagram.style.setProperty("--hub-w", hubW + "px");
+        diagram.style.setProperty("--hub-h", hubH + "px");
 
         lineGroup.innerHTML = "";
         nodesRoot.innerHTML = "";
@@ -261,21 +254,25 @@
           line.setAttribute("y1", y1);
           line.setAttribute("x2", x2);
           line.setAttribute("y2", y2);
+          line.setAttribute(
+            "stroke-width",
+            String(Math.max(2.5, Math.min(6, size * 0.0035)))
+          );
           line.setAttribute("marker-start", "url(#arrowHead)");
           line.setAttribute("marker-end", "url(#arrowHead)");
           lineGroup.appendChild(line);
 
           if (n.label === "Partner(n)") {
-            var t1 = 0.35;
-            var t2 = 0.58;
+            /* Hub at low t; Partner(n) at high t. 80% near partner, 20% toward hub; overlap slightly. */
             [
-              { t: t1, text: "20%" },
-              { t: t2, text: "80%" },
+              { t: 0.64, text: "20%" },
+              { t: 0.73, text: "80%", front: true },
             ].forEach(function (b) {
               var bx = x1 + (x2 - x1) * b.t;
               var by = y1 + (y2 - y1) * b.t;
               var badge = document.createElement("div");
-              badge.className = "split-badge";
+              badge.className =
+                "split-badge" + (b.front ? " split-badge--front" : "");
               badge.style.left = bx - cx + "px";
               badge.style.top = by - cy + "px";
               var inner = document.createElement("span");
