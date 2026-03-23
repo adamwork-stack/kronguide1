@@ -263,10 +263,10 @@
           lineGroup.appendChild(line);
 
           if (n.label === "Partner(n)") {
-            /* Hub at low t; Partner(n) at high t. 80% near partner, 20% toward hub; overlap slightly. */
+            /* x1,y1 = hub; x2,y2 = Partner(n). 80% = Kron Development side; 20% = individuals side. */
             [
-              { t: 0.64, text: "20%" },
-              { t: 0.73, text: "80%", front: true },
+              { t: 0.4, text: "80%", front: true },
+              { t: 0.62, text: "20%" },
             ].forEach(function (b) {
               var bx = x1 + (x2 - x1) * b.t;
               var by = y1 + (y2 - y1) * b.t;
