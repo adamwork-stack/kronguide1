@@ -38,6 +38,8 @@
       right: 0;
       top: 0;
       bottom: var(--footer-h);
+      width: 100%;
+      max-width: none;
       --hub-w: 200px;
       --hub-h: 104px;
     }
@@ -51,7 +53,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 16px;
+      padding: 0 12px;
       background: linear-gradient(
         180deg,
         rgba(255, 255, 255, 0.55) 0%,
@@ -120,7 +122,7 @@
       font-weight: 600;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      z-index: 4;
+      z-index: 6;
       transform: translate(-50%, -50%);
       border: 2px solid var(--peach-border);
       background: var(--peach);
@@ -139,7 +141,7 @@
       top: 50%;
       width: 0;
       height: 0;
-      z-index: 2;
+      z-index: 5;
       pointer-events: none;
     }
 
@@ -234,10 +236,12 @@
 
         var hubW = size * 0.42;
         var hubH = size * 0.22;
-        /* Push individuals outward; cap by viewport so nodes stay inside the screen. */
-        var nodePad = Math.max(40, size * 0.064);
-        var radius = Math.min(size * 0.58, cx - nodePad, cy - nodePad);
-        radius = Math.max(radius, size * 0.3);
+        /* Elliptical orbit: stretch to edges; margin reserves space for node box + badges. */
+        var nodeMargin = Math.max(52, size * 0.09);
+        var radiusX = cx - nodeMargin;
+        var radiusY = cy - nodeMargin;
+        radiusX = Math.max(radiusX, size * 0.24);
+        radiusY = Math.max(radiusY, size * 0.24);
 
         diagram.style.setProperty("--hub-w", hubW + "px");
         diagram.style.setProperty("--hub-h", hubH + "px");
@@ -256,10 +260,30 @@
         var hubRx = hubW / 2;
         var hubRy = hubH / 2;
 
+        function addPctBadges(x1, y1, x2, y2) {
+          /* Hub end = low t (80% Kron); node end = high t (20% individuals). */
+          [
+            { t: 0.4, text: "80%", front: true },
+            { t: 0.62, text: "20%" },
+          ].forEach(function (b) {
+            var bx = x1 + (x2 - x1) * b.t;
+            var by = y1 + (y2 - y1) * b.t;
+            var badge = document.createElement("div");
+            badge.className =
+              "split-badge" + (b.front ? " split-badge--front" : "");
+            badge.style.left = bx - cx + "px";
+            badge.style.top = by - cy + "px";
+            var inner = document.createElement("span");
+            inner.textContent = b.text;
+            badge.appendChild(inner);
+            splitBadges.appendChild(badge);
+          });
+        }
+
         nodes.forEach(function (n) {
           var rad = degToRad(n.angle);
-          var nx = cx + radius * Math.sin(rad);
-          var ny = cy - radius * Math.cos(rad);
+          var nx = cx + radiusX * Math.sin(rad);
+          var ny = cy - radiusY * Math.cos(rad);
 
           var el = document.createElement("div");
           el.className = "node" + (n.variant === "you" ? " node--you" : "");
@@ -306,25 +330,7 @@
           line.setAttribute("marker-end", "url(#arrowHead)");
           lineGroup.appendChild(line);
 
-          if (n.label === "Partner(n)") {
-            /* x1,y1 = hub; x2,y2 = Partner(n). 80% = Kron Development side; 20% = individuals side. */
-            [
-              { t: 0.4, text: "80%", front: true },
-              { t: 0.62, text: "20%" },
-            ].forEach(function (b) {
-              var bx = x1 + (x2 - x1) * b.t;
-              var by = y1 + (y2 - y1) * b.t;
-              var badge = document.createElement("div");
-              badge.className =
-                "split-badge" + (b.front ? " split-badge--front" : "");
-              badge.style.left = bx - cx + "px";
-              badge.style.top = by - cy + "px";
-              var inner = document.createElement("span");
-              inner.textContent = b.text;
-              badge.appendChild(inner);
-              splitBadges.appendChild(badge);
-            });
-          }
+          addPctBadges(x1, y1, x2, y2);
         });
 
         svg.setAttribute("viewBox", "0 0 " + w + " " + h);
