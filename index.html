@@ -15,6 +15,7 @@
       --peach-border: #e8a878;
       --blue-node: #4a7fc4;
       --blue-border: #3568a8;
+      --footer-h: clamp(48px, 9vmin, 64px);
     }
 
     html,
@@ -33,9 +34,38 @@
 
     .diagram {
       position: fixed;
-      inset: 0;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: var(--footer-h);
       --hub-w: 200px;
       --hub-h: 104px;
+    }
+
+    .page-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--footer-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(226, 232, 240, 0.92) 40%,
+        rgba(220, 228, 236, 0.98) 100%
+      );
+      border-top: 1px solid rgba(45, 122, 71, 0.22);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+      z-index: 10;
+      font-size: clamp(0.8rem, 2.2vmin, 1.05rem);
+      font-weight: 600;
+      color: #1e3d2a;
+      letter-spacing: 0.02em;
+      text-align: center;
     }
 
     .connections {
@@ -164,6 +194,10 @@
 
     <div id="nodesRoot"></div>
   </div>
+
+  <footer class="page-footer" role="contentinfo">
+    Kron Development + US partners Collaboration Model
+  </footer>
 
   <script>
     (function () {
